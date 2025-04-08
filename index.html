@@ -3,21 +3,11 @@
   <head>
     <meta charset="utf-8">
     <title>doooooonuts.</title>
-    <meta name="description" content="Une galerie spatiale 3D avec A-Frame">
+    <meta name="description" content="Tire sur les donuts !">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
       body { margin: 0; overflow: hidden; }
-      #info {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: rgba(0,0,0,0.5);
-        color: white;
-        padding: 10px;
-        border-radius: 8px;
-        font-family: sans-serif;
-      }
       #title {
         position: absolute;
         top: 50%;
@@ -28,107 +18,89 @@
         font-family: sans-serif;
         text-shadow: 0 0 20px rgba(255,255,255,0.8);
         pointer-events: none;
+        z-index: 10;
       }
     </style>
   </head>
   <body>
-    <div id="info">
-      <h2>doooooooonuts.</h2>
-      <p>Use your mouse to explore the space . Try on your mobile device to try a VR experience !</p>
-    </div>
-
     <div id="title">Doooooonuts.</div>
 
     <audio autoplay loop>
       <source src="background.mp3" type="audio/mpeg">
-      Your browser does not support the audio element.
     </audio>
 
-    <a-scene background="color: black" device-orientation="true">
-      <!-- Lumière -->
+    <a-scene background="color: black">
+      <a-assets></a-assets>
+
+      <!-- Caméra avec accéléromètre et contrôle de la souris -->
+      <a-entity id="cameraRig">
+        <a-entity camera look-controls="pointerLockEnabled: true" position="0 1.6 8" wasd-controls="enabled: true">
+          <a-entity 
+            cursor="rayOrigin: mouse" 
+            raycaster="objects: .clickable" 
+            position="0 0 -1" 
+            geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03" 
+            material="color: white; shader: flat" 
+            visible="false">
+          </a-entity>
+        </a-entity>
+      </a-entity>
+
+      <!-- Lumières -->
       <a-entity light="type: ambient; color: #888"></a-entity>
       <a-entity light="type: point; intensity: 1.2" position="0 4 4"></a-entity>
 
-      <!-- Caméra -->
-      <a-entity camera look-controls wasd-controls position="0 1.6 8"></a-entity>
-
-      <!-- Planètes -->
-      <a-sphere position="-4 1.5 -3" radius="1" color="#f39c12" segments-width="32" segments-height="32"></a-sphere>
-      <a-sphere position="0 2 -5" radius="1.2" color="#3498db" segments-width="32" segments-height="32"></a-sphere>
-      <a-sphere position="4 1.2 -3" radius="0.9" color="#9b59b6" segments-width="32" segments-height="32"></a-sphere>
-
-      <!-- Orbites décoratives -->
-      <a-ring position="0 0 -5" radius-inner="2.5" radius-outer="2.6" rotation="90 0 0" color="#ffffff" opacity="0.1"></a-ring>
-      <a-ring position="-4 0 -3" radius-inner="2" radius-outer="2.1" rotation="90 0 0" color="#ffffff" opacity="0.1"></a-ring>
-      <a-ring position="4 0 -3" radius-inner="1.8" radius-outer="1.9" rotation="90 0 0" color="#ffffff" opacity="0.1"></a-ring>
-
-      <!-- Étoiles -->
-      <a-entity id="star-container"></a-entity>
-
-      <!-- Donuts tournants -->
+      <!-- Conteneurs -->
       <a-entity id="donut-container"></a-entity>
-
-      <!-- Confettis -->
       <a-entity id="confetti-container"></a-entity>
     </a-scene>
 
     <script>
-      // Génération de petites étoiles aléatoires
-      const starContainerElem = document.querySelector('#star-container');
-      for (let i = 0; i < 200; i++) {
-        const star = document.createElement('a-sphere');
-        star.setAttribute('radius', '0.03');
-        star.setAttribute('color', '#FFFFFF');
-        star.setAttribute('position', {
-          x: (Math.random() - 0.5) * 50,
-          y: (Math.random() - 0.5) * 50,
-          z: (Math.random() - 0.5) * 50
-        });
-        starContainerElem.appendChild(star);
-      }
+      document.addEventListener('DOMContentLoaded', () => {
+        const donutContainer = document.querySelector('#donut-container');
+        const confettiContainer = document.querySelector('#confetti-container');
+        const donutColors = ['#e67e22', '#ff6384', '#36a2eb', '#9b59b6', '#2ecc71', '#f1c40f', '#1abc9c'];
 
-      // Génération de donuts tournants colorés et plus gros
-      const donutContainer = document.querySelector('#donut-container');
-      const donutColors = ['#e67e22', '#ff6384', '#36a2eb', '#9b59b6', '#2ecc71', '#f1c40f', '#1abc9c'];
-      for (let i = 0; i < 100; i++) {
-        const donut = document.createElement('a-torus');
-        donut.setAttribute('radius', '1');
-        donut.setAttribute('radius-tubular', '0.3');
-        donut.setAttribute('color', donutColors[Math.floor(Math.random() * donutColors.length)]);
-        donut.setAttribute('position', {
-          x: (Math.random() - 0.5) * 100,
-          y: (Math.random() - 0.5) * 100,
-          z: (Math.random() - 0.5) * 100
-        });
-        donut.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear');
-        donutContainer.appendChild(donut);
-      }
+        function createDonut() {
+          const donut = document.createElement('a-torus');
+          donut.setAttribute('class', 'clickable');
+          donut.setAttribute('radius', '1.5');
+          donut.setAttribute('radius-tubular', '0.4');
+          donut.setAttribute('color', donutColors[Math.floor(Math.random() * donutColors.length)]);
+          donut.setAttribute('position', `${(Math.random() - 0.5) * 40} ${(Math.random() - 0.5) * 20 + 2} ${(Math.random() - 0.5) * 40}`);
+          donut.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear');
+          donut.setAttribute('animation__scalein', 'property: scale; from: 0 0 0; to: 1 1 1; dur: 500; easing: easeOutBack');
 
-      // Confettis tombants et tournants
-      const confettiContainer = document.querySelector('#confetti-container');
-      for (let i = 0; i < 200; i++) {
-        const confetti = document.createElement('a-box');
-        confetti.setAttribute('depth', '0.02');
-        confetti.setAttribute('height', '0.1');
-        confetti.setAttribute('width', '0.02');
-        confetti.setAttribute('color', donutColors[Math.floor(Math.random() * donutColors.length)]);
-        const startY = Math.random() * 50 + 10;
-        const endY = startY - 30 - Math.random() * 20;
-        const position = {
-          x: (Math.random() - 0.5) * 80,
-          y: startY,
-          z: (Math.random() - 0.5) * 80
-        };
-        confetti.setAttribute('position', position);
-        confetti.setAttribute('rotation', {
-          x: Math.random() * 360,
-          y: Math.random() * 360,
-          z: Math.random() * 360
-        });
-        confetti.setAttribute('animation__fall', `property: position; to: ${position.x} ${endY} ${position.z}; loop: true; dur: ${5000 + Math.random() * 3000}; easing: linear`);
-        confetti.setAttribute('animation__spin', 'property: rotation; to: 360 360 360; loop: true; dur: 4000; easing: linear');
-        confettiContainer.appendChild(confetti);
-      }
+          donut.addEventListener('click', () => {
+            spawnConfetti(donut.object3D.position);
+            donut.remove();
+            createDonut();
+          });
+
+          donutContainer.appendChild(donut);
+        }
+
+        function spawnConfetti(position) {
+          for (let i = 0; i < 30; i++) {
+            const confetti = document.createElement('a-box');
+            confetti.setAttribute('depth', '0.02');
+            confetti.setAttribute('height', '0.1');
+            confetti.setAttribute('width', '0.02');
+            confetti.setAttribute('color', donutColors[Math.floor(Math.random() * donutColors.length)]);
+            confetti.setAttribute('position', `${position.x + (Math.random() - 0.5)} ${position.y + (Math.random() - 0.5)} ${position.z + (Math.random() - 0.5)}`);
+            confetti.setAttribute('animation__move', `property: position; to: ${position.x + (Math.random() - 0.5) * 4} ${position.y + Math.random() * 2} ${position.z + (Math.random() - 0.5) * 4}; dur: 1000; easing: easeOutQuad`);
+            confetti.setAttribute('animation__fade', 'property: material.opacity; from: 1; to: 0; dur: 1000; easing: linear');
+
+            confettiContainer.appendChild(confetti);
+
+            setTimeout(() => confetti.remove(), 1000);
+          }
+        }
+
+        for (let i = 0; i < 20; i++) {
+          createDonut();
+        }
+      });
     </script>
   </body>
 </html>
