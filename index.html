@@ -19,11 +19,26 @@
         text-shadow: 0 0 20px rgba(255,255,255,0.8);
         pointer-events: none;
         z-index: 10;
+        transition: opacity 1s ease;
+      }
+      #crosshair {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 12px;
+        height: 12px;
+        border: 2px solid white;
+        border-radius: 50%;
+        z-index: 10;
+        display: none;
+        pointer-events: none;
       }
     </style>
   </head>
   <body>
     <div id="title">Doooooonuts.</div>
+    <div id="crosshair"></div>
 
     <audio autoplay loop>
       <source src="background.mp3" type="audio/mpeg">
@@ -32,7 +47,6 @@
     <a-scene background="color: black">
       <a-assets></a-assets>
 
-      <!-- Caméra avec accéléromètre et contrôle de la souris -->
       <a-entity id="cameraRig">
         <a-entity camera look-controls="pointerLockEnabled: true" position="0 1.6 8" wasd-controls="enabled: true">
           <a-entity 
@@ -46,20 +60,26 @@
         </a-entity>
       </a-entity>
 
-      <!-- Lumières -->
       <a-entity light="type: ambient; color: #888"></a-entity>
       <a-entity light="type: point; intensity: 1.2" position="0 4 4"></a-entity>
 
-      <!-- Conteneurs -->
       <a-entity id="donut-container"></a-entity>
       <a-entity id="confetti-container"></a-entity>
     </a-scene>
 
     <script>
       document.addEventListener('DOMContentLoaded', () => {
+        const title = document.getElementById('title');
+        const crosshair = document.getElementById('crosshair');
         const donutContainer = document.querySelector('#donut-container');
         const confettiContainer = document.querySelector('#confetti-container');
         const donutColors = ['#e67e22', '#ff6384', '#36a2eb', '#9b59b6', '#2ecc71', '#f1c40f', '#1abc9c'];
+
+        setTimeout(() => {
+          title.style.opacity = '0';
+          setTimeout(() => title.style.display = 'none', 1000);
+          crosshair.style.display = 'block';
+        }, 4000);
 
         function createDonut() {
           const donut = document.createElement('a-torus');
@@ -72,6 +92,7 @@
           donut.setAttribute('animation__scalein', 'property: scale; from: 0 0 0; to: 1 1 1; dur: 500; easing: easeOutBack');
 
           donut.addEventListener('click', () => {
+            if (!donut.object3D) return;
             spawnConfetti(donut.object3D.position);
             donut.remove();
             createDonut();
