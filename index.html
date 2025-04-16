@@ -34,6 +34,10 @@
         display: none;
         pointer-events: none;
       }
+      /* Cacher le curseur mais garder son emplacement */
+      body {
+        cursor: none;
+      }
     </style>
   </head>
   <body>
@@ -80,6 +84,12 @@
           setTimeout(() => title.style.display = 'none', 1000);
           crosshair.style.display = 'block';
         }, 4000);
+
+        // Suivre la position de la souris et déplacer le curseur au centre du réticule
+        document.addEventListener('mousemove', (event) => {
+          crosshair.style.left = `${event.pageX - crosshair.offsetWidth / 2}px`;
+          crosshair.style.top = `${event.pageY - crosshair.offsetHeight / 2}px`;
+        });
 
         function createDonut() {
           const donut = document.createElement('a-torus');
